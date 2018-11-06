@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using Posts.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Swagger;
+using Posts.Api.Models;
 
 namespace Posts.Api
 {
@@ -33,7 +34,20 @@ namespace Posts.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            services.AddDbContext<BlogPostContext>(opt => opt.UseInMemoryDatabase("BlogPosts"));
+
+            // Deprecated - in-memory database
+            //services.AddDbContext<BlogPostContext>(opt => 
+            //    opt.UseInMemoryDatabase("BlogPosts")
+            //);
+
+            // Deprecated - MsSQL server
+            //var connection = @"Server=(localdb)\mssqllocaldb;Database=BlogPostsDb;Trusted_Connection=True;ConnectRetryCount=0";
+            //services.AddDbContextPool<BlogPostContext>(options => options.UseSqlServer(connection));
+
+            // Latest: SQLite
+            var connection = @"Data Source=Data/Posts.db";
+            services.AddDbContextPool<BlogPostContext>(opt => opt.UseSqlite(connection));
+
             services.AddSwaggerGen(c =>
             {
                 Contact contact = new Contact { Name = "name", Email = "a@a.a", Url = "asdf.asdf"};
@@ -43,7 +57,7 @@ namespace Posts.Api
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, BlogPostContext context)
         {
             if (env.IsDevelopment())
             {
@@ -53,6 +67,18 @@ namespace Posts.Api
             {
                 app.UseExceptionHandler("/api/Error");
                 app.UseHsts();
+
+                context.Database.EnsureCreated();
+
+                if (!context.BlogPosts.Any())
+                {
+                    var posts = new List<BlogPost>
+                    {
+                        new BlogPost{Id=1, Title="RazDwaTrzy", Description="CzteryPiecSzesc"}
+                    };
+                    context.BlogPosts.AddRange(posts);
+                    context.SaveChanges();
+                }
             }
 
             app.UseHttpsRedirection();
