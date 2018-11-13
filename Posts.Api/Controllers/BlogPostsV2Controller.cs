@@ -10,38 +10,39 @@ using Posts.Api.Repositories;
 
 namespace Posts.Api.Controllers
 {
-    [ApiVersion("1")]
+    [ApiVersion("2")]
     [Route("api/v{version:apiVersion}/BlogPosts")]
     [ApiController]
-    public class BlogPostsController : ControllerBase
+    public class BlogPostsV2Controller : ControllerBase
     {
         private readonly IBlogPostRepository _postsDbRepository;
 
         private readonly ILogger<BlogPostsController> _logger;
 
-        public BlogPostsController(ILogger<BlogPostsController> logger, IBlogPostRepository postsDbRepository)
+        public BlogPostsV2Controller(ILogger<BlogPostsController> logger, IBlogPostRepository postsDbRepository)
         {
             this._logger = logger;
             this._postsDbRepository = postsDbRepository;
         }
 
-        // GET api/blogposts
+        // GET api/v2/blogposts[?pageIndex=3&pageSize=10]
         [HttpGet]
-        // Add code status returning
-        public async Task<ActionResult<IEnumerable<BlogPost>>> Get()
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<BlogPost>))]
+        [ProducesResponseType(200, Type = typeof(PaginatedItems<BlogPost>))]
+        public async Task<IActionResult> Get([FromQuery]int pageIndex = -1, [FromQuery]int pageSize = 5)
         {
-            // throw new Exception(""); // Faked exception
-
-            var list = await this._postsDbRepository.GetAllAsync().ToList();
-
-            if (list == null)
+            if (pageIndex < 0)
             {
-                _logger.LogWarning("No posts were found");
-                return NoContent();
+                var posts = this._postsDbRepository.GetAllAsync();
+                return Ok(posts);
             }
             else
             {
-                return Ok(list);
+                var pagedPosts = await this._postsDbRepository.GetAllPagedAsync(pageIndex, pageSize);
+                var isLastPage = pagedPosts.TotalItems <= (pageIndex * pageSize + pageSize);
+                pagedPosts.NextPage = !isLastPage ? Url.Link(null, new { pageIndex = pageIndex + 1, pageSize = pageSize }) : null;
+                return Ok(pagedPosts);
             }
         }
 
@@ -50,12 +51,12 @@ namespace Posts.Api.Controllers
         public async Task<IActionResult> Post([FromBody] BlogPost post)
         {
             await this._postsDbRepository.AddAsync(post);
-            return CreatedAtRoute("GetBlogPost", new { id = post.Id }, post);
+            return CreatedAtRoute("GetBlogPostV2", new { id = post.Id }, post);
         }
 
 
         // GET api/blogposts/5
-        [HttpGet("{id}", Name = "GetBlogPost")]
+        [HttpGet("{id}", Name = "GetBlogPostV2")]
         public async Task<ActionResult<BlogPost>> Get(long id)
         {
             var item = await this._postsDbRepository.GetAsync(id);

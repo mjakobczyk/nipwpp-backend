@@ -15,6 +15,8 @@ using Posts.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Swagger;
 using Posts.Api.Models;
+using Posts.Api.Repositories;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
 namespace Posts.Api
 {
@@ -48,16 +50,38 @@ namespace Posts.Api
             var connection = @"Data Source=Data/Posts.db";
             services.AddDbContextPool<BlogPostContext>(opt => opt.UseSqlite(connection));
 
-            services.AddSwaggerGen(c =>
+            services.AddMvcCore().AddVersionedApiExplorer(
+                options =>
+                {
+                    options.GroupNameFormat = "'v'VVV";
+                    options.SubstituteApiVersionInUrl = true;
+                });
+
+            services.AddApiVersioning(options => options.ReportApiVersions = true);
+
+            services.AddSwaggerGen(options =>
             {
+                var provider = services.BuildServiceProvider().GetRequiredService<Microsoft.AspNetCore.Mvc.ApiExplorer.IApiVersionDescriptionProvider>();
                 Contact contact = new Contact { Name = "name", Email = "a@a.a", Url = "asdf.asdf"};
-                c.SwaggerDoc("v1", new Info { Title = "Blog Posts API", Version = "v1", Contact = contact });
+                foreach (var description in provider.ApiVersionDescriptions)
+                {
+                    options.SwaggerDoc(description.GroupName, new Info { Title = "Blog Posts API", Version = description.ApiVersion.ToString(), Contact = contact });
+                }
+                //options.SwaggerDoc("v1", new Info { Title = "Blog Posts API", Version = "v1", Contact = contact });
             });
 
+            //---------------------------------------------------------------
+            services.AddScoped<IBlogPostRepository,BlogPostRepository>();
+            //services.AddScoped<Blog>();
+            // Fix this ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            //---------------------------------------------------------------
+
+            // TODO: add versioning
+            // end 8. point
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, BlogPostContext context)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApiVersionDescriptionProvider apiVersionProvider, BlogPostContext context)
         {
             if (env.IsDevelopment())
             {
@@ -87,7 +111,12 @@ namespace Posts.Api
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog Posts API v1");
+                foreach (var description in apiVersionProvider.ApiVersionDescriptions)
+                {
+                    c.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName);
+                }
+                //c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog Posts API v1");
+                c.RoutePrefix = string.Empty;
             });
 
             
