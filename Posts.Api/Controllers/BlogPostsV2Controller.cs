@@ -45,6 +45,25 @@ namespace Posts.Api.Controllers
                 return Ok(pagedPosts);
             }
         }
+        // GET api/v2/blogposts[?pageIndex=3&pageSize=10]
+        [HttpGet("withtitle/{title:minlength(1)}")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200, Type = typeof(PaginatedItems<BlogPost>))]
+        public async Task<IActionResult> Get(string title, [FromQuery]int pageIndex = -1, [FromQuery]int pageSize = 5)
+        {
+            if (pageIndex < 0)
+            {
+                var posts = this._postsDbRepository.GetAllAsync();
+                return Ok(posts);
+            }
+            else
+            {
+                var pagedPosts = await this._postsDbRepository.GetAllPagedAsync(pageIndex, pageSize, x => x.Title.Contains(title));
+                var isLastPage = pagedPosts.TotalItems <= (pageIndex * pageSize + pageSize);
+                pagedPosts.NextPage = !isLastPage ? Url.Link(null, new { pageIndex = pageIndex + 1, pageSize = pageSize }) : null;
+                return Ok(pagedPosts);
+            }
+        }
 
         // POST api/blogposts
         [HttpPost]

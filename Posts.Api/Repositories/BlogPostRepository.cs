@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Posts.Api.Repositories
 {
@@ -46,11 +47,16 @@ namespace Posts.Api.Repositories
             await this._context.SaveChangesAsync();
         }
 
-        public async Task<PaginatedItems<BlogPost>> GetAllPagedAsync(int pageIndex, int pageSize)
+        public async Task<PaginatedItems<BlogPost>> GetAllPagedAsync(int pageIndex, int pageSize, Expression<Func<BlogPost, bool>> filter = null)
         {
             var totalItems = await this._context.BlogPosts.CountAsync();
-            var posts = await _context.BlogPosts.OrderByDescending(c => c.Id).Skip(pageIndex * pageSize).Take(pageSize).ToListAsync();
 
+            IQueryable<BlogPost> query = _context.BlogPosts;
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            var posts = await query.OrderByDescending(c => c.Id).Skip(pageIndex * pageSize).Take(pageSize).ToListAsync();
             var pagedPosts = new PaginatedItems<BlogPost> { PageIndex = pageIndex, PageSize = pageSize };
             pagedPosts.Items = posts;
             pagedPosts.TotalItems = totalItems;

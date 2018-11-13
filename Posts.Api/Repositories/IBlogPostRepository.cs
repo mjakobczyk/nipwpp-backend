@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace Posts.Api.Repositories
@@ -13,6 +14,6 @@ namespace Posts.Api.Repositories
         Task AddAsync(BlogPost post);
         Task UpdateAsync(BlogPost post);
         Task DeleteAsync(long id);
-        Task<PaginatedItems<BlogPost>> GetAllPagedAsync(int pageIndex, int pageSize);
+        Task<PaginatedItems<BlogPost>> GetAllPagedAsync(int pageIndex, int pageSize, Expression<Func<BlogPost, bool>> filter = null);
     }
 }
