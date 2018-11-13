@@ -65,6 +65,43 @@ namespace Posts.Api.Controllers
             }
         }
 
+        [HttpGet("{id}/comments", Name = "GetBlogPostComments")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200, Type = typeof(PaginatedItems<BlogPostComment>))]
+        public async Task<ActionResult<IEnumerable<BlogPostComment>>> GetAllComments(long id)
+        {
+            var item = await this._postsDbRepository.GetAsync(id);
+
+            if (item == null)
+            {
+                _logger.LogWarning("Post {0} not found", id);
+                return NotFound();
+            }
+            else
+            {
+                return Ok(await this._postsDbRepository.GetCommentsAsync(id));
+            }
+        }
+
+        [HttpPost("{id}/comments")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(200, Type = typeof(PaginatedItems<BlogPostComment>))]
+        public async Task<ActionResult<IEnumerable<BlogPostComment>>> PostComment(long id, [FromBody] BlogPostComment comment)
+        {
+            var item = await this._postsDbRepository.GetAsync(id);
+
+            if (item == null)
+            {
+                _logger.LogWarning("Post {0} not found", id);
+                return NotFound();
+            }
+            else
+            {
+                await this._postsDbRepository.AddCommentAsync(id, comment);
+                return CreatedAtRoute("GetBlogPostComments", new { id = id }, comment);
+            }
+        }
+
         // POST api/blogposts
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] BlogPost post)

@@ -15,5 +15,6 @@ namespace Posts.Api.Models
         public string Title { get; set; }
         [StringLength(4096)]
         public string Description { get; set; }
+        public ICollection<BlogPostComment> Comments { get; set; }
     }
 }

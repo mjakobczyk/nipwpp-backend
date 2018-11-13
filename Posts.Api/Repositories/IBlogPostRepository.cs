@@ -15,5 +15,7 @@ namespace Posts.Api.Repositories
         Task UpdateAsync(BlogPost post);
         Task DeleteAsync(long id);
         Task<PaginatedItems<BlogPost>> GetAllPagedAsync(int pageIndex, int pageSize, Expression<Func<BlogPost, bool>> filter = null);
+        Task<IEnumerable<BlogPostComment>> GetCommentsAsync(long blogPostId);
+        Task AddCommentAsync(long blogPostId, BlogPostComment comment);
     }
 }

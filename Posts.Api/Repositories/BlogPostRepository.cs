@@ -33,6 +33,17 @@ namespace Posts.Api.Repositories
             await this._context.BlogPosts.AddAsync(post);
             await this._context.SaveChangesAsync();
         }
+        public async Task<IEnumerable<BlogPostComment>> GetCommentsAsync(long blogPostId)
+        {
+            var post = await _context.BlogPosts.Include(x => x.Comments).Where(x => x.Id == blogPostId).FirstAsync();
+            return post.Comments;
+        }
+
+        public async Task AddCommentAsync(long blogPostId, BlogPostComment comment)
+        {
+            var post = await _context.BlogPosts.Include(x => x.Comments).Where(x => x.Id == blogPostId).FirstAsync(); post.Comments.Add(comment);
+            await this._context.SaveChangesAsync();
+        }
 
         public async Task UpdateAsync(BlogPost post)
         {
