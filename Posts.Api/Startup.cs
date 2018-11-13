@@ -42,13 +42,23 @@ namespace Posts.Api
             //    opt.UseInMemoryDatabase("BlogPosts")
             //);
 
+            var dbType = Configuration.GetValue<string>("SelectedDbType");
+            if (dbType == "SQLite")
+            {
+                var connection = Configuration.GetConnectionString("SQLiteBlogPostsDatabase");
+                services.AddDbContextPool<BlogPostContext>(opt => opt.UseSqlite(connection));
+            }
+            else
+            {
+                var connection = Configuration.GetConnectionString("MsSQLBlogPostsDatabase");
+                services.AddDbContextPool<BlogPostContext>(options => options.UseSqlServer(connection));
+            }
+
             // Deprecated - MsSQL server
-            //var connection = @"Server=(localdb)\mssqllocaldb;Database=BlogPostsDb;Trusted_Connection=True;ConnectRetryCount=0";
-            //services.AddDbContextPool<BlogPostContext>(options => options.UseSqlServer(connection));
 
             // Latest: SQLite
-            var connection = @"Data Source=Data/Posts.db";
-            services.AddDbContextPool<BlogPostContext>(opt => opt.UseSqlite(connection));
+            //var connection = @"Data Source=Data/Posts.db";
+
 
             services.AddMvcCore().AddVersionedApiExplorer(
                 options =>

@@ -18,8 +18,10 @@ namespace Posts.Api
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
+            WebHost.CreateDefaultBuilder(args).ConfigureAppConfiguration((hostingConstex, config) => {
+                config.SetBasePath(Directory.GetCurrentDirectory());
+                config.AddJsonFile("dbsettings.json", optional: false, reloadOnChange: true);
+                }).UseStartup<Startup>()
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();

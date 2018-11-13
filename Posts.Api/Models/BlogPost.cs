@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace Posts.Api.Models
@@ -16,5 +17,8 @@ namespace Posts.Api.Models
         [StringLength(4096)]
         public string Description { get; set; }
         public ICollection<BlogPostComment> Comments { get; set; }
+        [Timestamp]
+        [IgnoreDataMember]
+        public byte[] RowVersion { get; set; }
     }
 }
