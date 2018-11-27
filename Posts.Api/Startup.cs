@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 using Posts.Api.Data;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
 namespace Posts.Api
 {
+
     public class Startup
     {
         private readonly ILogger<Startup> _logger;
@@ -38,17 +35,17 @@ namespace Posts.Api
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             // Deprecated - in-memory database
-            //services.AddDbContext<BlogPostContext>(opt => 
-            //    opt.UseInMemoryDatabase("BlogPosts")
-            //);
+            services.AddDbContext<BlogPostContext>(opt => 
+                opt.UseInMemoryDatabase("BlogPosts")
+            );
 
             // Deprecated - MsSQL server
             //var connection = @"Server=(localdb)\mssqllocaldb;Database=BlogPostsDb;Trusted_Connection=True;ConnectRetryCount=0";
             //services.AddDbContextPool<BlogPostContext>(options => options.UseSqlServer(connection));
 
             // Latest: SQLite
-            var connection = @"Data Source=Data/Posts.db";
-            services.AddDbContextPool<BlogPostContext>(opt => opt.UseSqlite(connection));
+            //var connection = @"Data Source=Data/Posts.db";
+            //services.AddDbContextPool<BlogPostContext>(opt => opt.UseSqlite(connection));
 
             services.AddMvcCore().AddVersionedApiExplorer(
                 options =>
